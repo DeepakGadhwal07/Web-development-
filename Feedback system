@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feedback System</title>
+</head>
+<body>
+  <h2>Submit Feedback</h2>
+  <form id="feedbackForm">
+    <input type="text" id="name" placeholder="Your Name" required /><br><br>
+    <textarea id="message" placeholder="Your Feedback" required></textarea><br><br>
+    <button type="submit">Submit</button>
+  </form>
+  <div id="responseMsg"></div>
+
+  <script>
+    document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const message = document.getElementById('message').value;
+
+      const res = await fetch('/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, message })
+      });
+
+      const data = await res.json();
+      document.getElementById('responseMsg').textContent = data.message;
+      document.getElementById('feedbackForm').reset();
+    });
+  </script>
+</body>
+</html>
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+app.use(express.static(__dirname)); // Serves index.html
+
+let feedbacks = [];
+
+app.post('/feedback', (req, res) => {
+  const { name, message } = req.body;
+  if (!name || !message) {
+    return res.status(400).json({ message: 'Name and message are required' });
+  }
+  feedbacks.push({ name, message, date: new Date() });
+  res.json({ message: 'Feedback submitted successfully!' });
+});
+
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
